@@ -8,11 +8,11 @@ class Market {
     }
     async loadRaydium(){
         this.radium = await Raydium.load({
-            owner,
-            connection,
-            cluster,
+            owner:this.owner,
+            connection:this.connection,
+            cluster:"mainnet",
             disableFeatureCheck: true,
-            disableLoadToken: !params?.loadToken,
+            disableLoadToken: !this.params?.loadToken,
             blockhashCommitment: 'finalized',
             // urlConfigs: {
             //   BASE_HOST: '<API_HOST>', // api url configs, currently api doesn't support devnet

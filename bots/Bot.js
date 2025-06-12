@@ -6,7 +6,33 @@ global.loglevel = 'debug';
 const Logger = require('../helpers/logger.js');
 global.appLogger = new Logger("raydium-bot", "log/raydium-bot.log", "log/raydium-bot.log", global.loglevel);
 
+
+const Client = require('../helpers/Client.js');
+const Market = require('../helpers/Market.js');
+
+const { sleep } = require('../helpers/common.js');
+
 const main = async () => {
+    let client = new Client(config.nodeUrl);
+    let market = new Market(client.connection, owner,{loadToken:true});
+    await market.loadRaydium();
+
+    if(market.radium === null) {
+        global.appLogger.error("No radium bot found.");
+        process.exit(1);
+    }
+
+    while(true){
+        try{
+
+
+        }catch(err){
+            global.appLogger.error('err: ', err);
+        }
+        await sleep(config.checkInterval);
+    }
+
+
 
 
 }
