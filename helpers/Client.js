@@ -1,4 +1,5 @@
-const { Connection } = require('@solana/web3.js');
+const { Connection, PublicKey } = require('@solana/web3.js');
+const { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getMint } = require('@solana/spl-token');
 const CONN_TIME_OUT = 10 * 30* 1000 * 2;
 const  { TimeoutPromise } = require('../helpers/common')
 class Client {
@@ -166,6 +167,78 @@ class Client {
             this.logger.error('getSignaturesForAddress, e:',e);
             throw e;
         }
+    }
+    async getMintInfo(mintAddress) {
+        try {
+            const mintPublicKey = new PublicKey(mintAddress);
+
+            const mintInfo = await this.connection.getParsedAccountInfo(mintPublicKey);
+            if (mintInfo.value && mintInfo.value.data && mintInfo.value.data.parsed) {
+                return mintInfo.value.data.parsed.info;
+            }
+            this.logger.warn('Could not retrieve the token decimals.', mintAddress);
+            return null;
+        } catch (err) {
+            this.logger.error('Error fetching token info:', mintAddress, err);
+            return null;
+        }
+    }
+    async getTokenBalance(walletAddress, tokenMintAddress) {
+        let log = this.logger;
+        let client = this.connection;
+
+
+        return new TimeoutPromise(async function (resolve, reject) {
+            try {
+                const tokenAccounts = await client.getParsedTokenAccountsByOwner(
+                    new PublicKey(walletAddress),
+                    {
+                        programId: TOKEN_PROGRAM_ID,
+                    }
+                );
+                log.debug('tokenAccounts', tokenAccounts);
+
+                const tokenAccount = tokenAccounts.value.find(
+                    accountInfo => accountInfo.account.data.parsed.info.mint === tokenMintAddress
+                );
+                log.debug('tokenMintAddress', tokenMintAddress, 'tokenAccount', tokenAccount, tokenAccount.pubkey);
+
+                if (tokenAccount) {
+                    const balance = await client.getTokenAccountBalance(tokenAccount.pubkey);
+                    log.debug(`Token ${tokenMintAddress} tokenAccount ${tokenAccount.pubkey} Balance: ${balance.value.uiAmount}`);
+                    resolve(balance.value.uiAmount);
+                } else {
+                    log.warn(`Token account not found, walletAddress ${walletAddress} tokenMintAddress ${tokenMintAddress}`);
+                    resolve(0);
+                }
+            } catch (err) {
+                reject(err);
+            }
+        }, CONN_TIME_OUT, "solana  getTokenBalance timeout");
+
+    }
+    getPublicKey(account) {
+        return new PublicKey(account);
+    }
+    async getTokenAccount(walletAddress, tokenMintAddress) {
+        let self = this;
+        let log = this.log;
+        return new TimeoutPromise(async function (resolve, reject) {
+            try {
+                let tokenAccountInfo = await self.connection.getAccountInfo(self.getPublicKey(tokenMintAddress));
+                log.debug('getTokenAccount walletAddress %s, tokenMintAddress %s, tokenOwner %s', walletAddress, tokenMintAddress, tokenAccountInfo.owner.toString());
+                const ataAddress = await getAssociatedTokenAddress(
+                    self.getPublicKey(tokenMintAddress),
+                    self.getPublicKey(walletAddress),
+                    true,
+                    self.getPublicKey(tokenAccountInfo.owner)
+                );
+                log.debug(`Associated Token Account Address: ${ataAddress.toString()}`);
+                resolve(ataAddress.toString());
+            } catch (err) {
+                reject(err);
+            }
+        }, CONN_TIME_OUT, ' getTokenAccount timeout');
     }
 }
 module.exports = Client;
