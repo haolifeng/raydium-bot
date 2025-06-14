@@ -1,5 +1,20 @@
-const { Connection, PublicKey } = require('@solana/web3.js');
-const { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getMint } = require('@solana/spl-token');
+const {
+    Connection,
+    PublicKey,
+    Keypair,
+    SystemProgram,
+    LAMPORTS_PER_SOL,
+    Transaction,
+    sendAndConfirmTransaction
+
+} = require('@solana/web3.js');
+const { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getMint,
+    createMint,
+    getOrCreateAssociatedTokenAccount,
+    mintTo,
+    createTransferInstruction,getAssociatedTokenAddressSync
+
+} = require('@solana/spl-token');
 const CONN_TIME_OUT = 10 * 30* 1000 * 2;
 const  { TimeoutPromise } = require('../helpers/common')
 class Client {
@@ -240,5 +255,48 @@ class Client {
             }
         }, CONN_TIME_OUT, ' getTokenAccount timeout');
     }
+
+    async sendSolAndConfirmTransaction(connection, fromKeypair, toPubkey, lamportsToSend) {
+        const transferTransaction = new Transaction().add(
+            SystemProgram.transfer({
+                fromPubkey: fromKeypair.publicKey,
+                toPubkey: toPubkey,
+                lamports: lamportsToSend
+            })
+        );
+
+        const signature = await sendAndConfirmTransaction(
+            this.connection,
+            transferTransaction,
+            [fromKeypair]
+        );
+
+        console.log('signature', signature);
+        return signature;
+    }
+
+    async sendTokenAndConfirmTransaction( mint, fromKeypair, toPublicKey, amount) {
+        const fromTokenAccount = await getAssociatedTokenAddressSync(mint,fromKeypair.publicKey)
+
+        const toTokenAccount = await getAssociatedTokenAddressSync(mint, toPublicKey)
+
+        const transaction = new Transaction().add(
+            createTransferInstruction(
+                fromTokenAccount,
+                toTokenAccount,
+                fromKeypair.publicKey,
+                amount
+            )
+        );
+
+        // Sign transaction, broadcast, and confirm
+        let ret = await sendAndConfirmTransaction(this.connection, transaction, [fromKeypair]);
+
+        return ret;
+
+
+    }
+
+
 }
 module.exports = Client;
