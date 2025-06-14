@@ -256,7 +256,7 @@ class Client {
         }, CONN_TIME_OUT, ' getTokenAccount timeout');
     }
 
-    async sendSolAndConfirmTransaction(connection, fromKeypair, toPubkey, lamportsToSend) {
+    async sendSolAndConfirmTransaction( fromKeypair, toPubkey, lamportsToSend) {
         const transferTransaction = new Transaction().add(
             SystemProgram.transfer({
                 fromPubkey: fromKeypair.publicKey,

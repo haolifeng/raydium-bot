@@ -8,12 +8,15 @@ let config = {
         poolId:"3ucNos4NbumPLZNWztqGHNFFgkHeRMBQAVemeeomsUxv",
         mintA:{
             scAddr:WSOLMint,
-            softMaxLimit:10000 * 1000000
+            softMaxLimit:10000 * 1000000,
+
         },
         mintB:{
             scAddr:USDCMint,
             softMaxLimit:10000 * 1000000
         },
+        foundation:"4mJMQXYNWy1nGba5kMFaKf2a3EVfbSPVo7EFYkoWFWa4"
+
     },
     market:{
         gasMiniLimit:10000,
