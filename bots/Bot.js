@@ -15,6 +15,8 @@ const {myKeyPairByMne } = require("../wallets/Wallet");
 
 const BalanceRule = require("../rules/BalanceRule.js");
 
+const PriceRule = require("../rules/PriceRule.js");
+
 const main = async () => {
     let client = new Client(config.nodeUrl);
     let owner = myKeyPairByMne();
@@ -28,11 +30,15 @@ const main = async () => {
     }
 
     let balanceRule = new BalanceRule(owner, client, config);
+    let priceRule = new PriceRule(owner,client, market, config);
 
 
 
 
-    await balanceRule.run();
+
+    //await balanceRule.run();
+
+    await priceRule.run();
 
 }
 // catch unhandled errors

@@ -15,13 +15,19 @@ let config = {
             scAddr:USDCMint,
             softMaxLimit:10000 * 1000000
         },
-        foundation:"4mJMQXYNWy1nGba5kMFaKf2a3EVfbSPVo7EFYkoWFWa4"
+        foundation:"4mJMQXYNWy1nGba5kMFaKf2a3EVfbSPVo7EFYkoWFWa4",
+        miniLowPrice:100
 
     },
     market:{
         gasMiniLimit:10000,
         unitPrice:465915,
         units:600000,
+
+        priceTrade: {
+            inputMint: USDCMint,
+            inputAmount:100,
+        }
 
     }
 
