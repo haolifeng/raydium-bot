@@ -1,5 +1,7 @@
 const RuleInterface = require("./ruleInterface");
-class BalanceRule extends RuleInterface {
+const config = require("../config/Config");
+const { sleep } = require("../helpers/common");
+class VolumRule extends RuleInterface {
     constructor(owner,client, market, config) {
         super();
         this.owner = owner;
@@ -8,13 +10,29 @@ class BalanceRule extends RuleInterface {
         this.config = config;
 
     }
-    run() {
+    async run() {
+        while(True) {
+            if(this.checkCondition()) {
+                await this.perform();
+            }
+
+            await sleep()
+        }
     };
 
     checkCondition() {
+        return true;
     } ;
 
-    perform() {
+    async  perform() {
+        try{
+            let inputMint = this.config.market.priceTrade.inputMint;
+            let inputAmount = this.config.market.priceTrade.inputAmount;
+            let txId = await this.market.swap(inputMint, inputAmount);
+            this.logger.info("perform, swap , txid: ", txId);
+        }catch (e) {
+            this.logger.error('e:', e);
+        }
     };
 }
-module.exports = BalanceRule;
+module.exports = VolumRule;

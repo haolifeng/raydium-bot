@@ -35,10 +35,15 @@ class PriceRule  extends  RuleInterface{
 
     } ;
     async perform(){
-        let inputMint = this.config.market.priceTrade.inputMint;
-        let inputAmount = this.config.market.priceTrade.inputAmount;
-        let txId = await this.market.swap(inputMint, inputAmount);
-        this.logger.info("perform, swap , txid: ", txId);
+        try{
+            let inputMint = this.config.market.priceTrade.inputMint;
+            let inputAmount = this.config.market.priceTrade.inputAmount;
+            let txId = await this.market.swap(inputMint, inputAmount);
+            this.logger.info("perform, swap , txid: ", txId);
+        }catch (e) {
+            this.logger.error('e:', e);
+        }
+
     };
 }
 
