@@ -28,6 +28,9 @@ const main = async () => {
 
     let balanceRule = new BalanceRule(owner, client, config);
 
+
+
+
     await balanceRule.run();
 
 }

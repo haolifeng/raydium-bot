@@ -211,12 +211,12 @@ class Client {
                         programId: TOKEN_PROGRAM_ID,
                     }
                 );
-                log.debug('tokenAccounts', tokenAccounts);
+                log.debug('getTokenBalance, tokenAccounts', tokenAccounts);
 
                 const tokenAccount = tokenAccounts.value.find(
                     accountInfo => accountInfo.account.data.parsed.info.mint === tokenMintAddress
                 );
-                log.debug('tokenMintAddress', tokenMintAddress, 'tokenAccount', tokenAccount, tokenAccount.pubkey);
+                log.debug('tokenMintAddress', tokenMintAddress, 'tokenAccount', tokenAccount);
 
                 if (tokenAccount) {
                     const balance = await client.getTokenAccountBalance(tokenAccount.pubkey);
