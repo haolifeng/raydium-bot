@@ -20,6 +20,7 @@ const main = async () => {
     let owner = myKeyPairByMne();
     let market = new Market(client.connection, owner,{loadToken:true});
     await market.loadRaydium();
+    market.setPoolId(config.pool.poolId);
 
     if(market.radium === null) {
         global.appLogger.error("No radium bot found.");

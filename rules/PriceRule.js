@@ -13,6 +13,7 @@ class PriceRule  extends  RuleInterface{
     checkCondition(){
         try{
 
+
         }catch(e){
             this.logger.error('PriceRule: checkCondition', e);
         }

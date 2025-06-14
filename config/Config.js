@@ -20,6 +20,8 @@ let config = {
     },
     market:{
         gasMiniLimit:10000,
+        unitPrice:465915,
+        units:600000,
 
     }
 
