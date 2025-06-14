@@ -1,7 +1,7 @@
 const RuleInterface = require("./ruleInterface");
 class PriceRule  extends  RuleInterface{
     run(){};
-    checkConnection(connection){} ;
+    checkCondition(){} ;
     perform(){};
 }
 

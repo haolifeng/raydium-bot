@@ -11,9 +11,13 @@ const Client = require('../helpers/Client.js');
 const Market = require('../helpers/Market.js');
 
 const { sleep } = require('../helpers/common.js');
+const {myKeyPairByMne } = require("../wallets/Wallet");
+
+const BalanceRule = require("../rules/BalanceRule.js");
 
 const main = async () => {
     let client = new Client(config.nodeUrl);
+    let owner = myKeyPairByMne();
     let market = new Market(client.connection, owner,{loadToken:true});
     await market.loadRaydium();
 
@@ -22,18 +26,9 @@ const main = async () => {
         process.exit(1);
     }
 
-    while(true){
-        try{
+    let balanceRule = new BalanceRule(owner, client, config);
 
-
-        }catch(err){
-            global.appLogger.error('err: ', err);
-        }
-        await sleep(config.checkInterval);
-    }
-
-
-
+    await balanceRule.run();
 
 }
 // catch unhandled errors

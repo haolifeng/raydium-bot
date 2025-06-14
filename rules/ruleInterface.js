@@ -2,8 +2,8 @@
 
 class RuleInterface{
     run(){};
-    checkConnection(connection){} ;
+    checkCondition(connection){} ;
     perform(){};
 }
 
-module.exports.RuleInterface = RuleInterface;
+module.exports = RuleInterface;
