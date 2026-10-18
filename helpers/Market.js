@@ -29,7 +29,7 @@ class Market {
         this.radium = await Raydium.load({
             owner:this.owner,
             connection:this.connection,
-            cluster:"mainnet",
+            cluster: config.cluster,
             disableFeatureCheck: true,
             disableLoadToken: !this.params?.loadToken,
             blockhashCommitment: 'finalized',

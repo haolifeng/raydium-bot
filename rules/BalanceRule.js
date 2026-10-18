@@ -9,6 +9,7 @@ class BalanceRule extends RuleInterface{
         this.client = client;
         this.config = config;
         this.logger = global.appLogger;
+        this.foundation = new PublicKey(this.config.pool.foundation);
     }
     async run(){
         while(true){
@@ -42,48 +43,50 @@ class BalanceRule extends RuleInterface{
         }
 
     }
+    async sweepSol(balance, softMaxLimit, mint){
+        let leftAmount = balance - softMaxLimit;
+        if(leftAmount <= 0){
+            return;
+        }
+        try{
+            let ret = await this.client.sendSolAndConfirmTransaction(this.owner, this.foundation, leftAmount);
+            this.logger.info('mint ', mint, ' balance too high, send foundation leftBalance: ', leftAmount, ', ret: ', ret);
+        }catch(e){
+            this.logger.error('sweepSol failed, mint: ', mint, 'leftAmount: ', leftAmount, 'e: ', e);
+        }
+    }
+    async sweepToken(balance, softMaxLimit, mint){
+        let leftAmount = balance - softMaxLimit;
+        if(leftAmount <= 0){
+            return;
+        }
+        try{
+            let ret = await this.client.sendTokenAndConfirmTransaction(mint, this.owner, this.foundation, leftAmount);
+            this.logger.info('mint ', mint, ' balance too high, send foundation leftBalance: ', leftAmount, ', ret: ', ret);
+        }catch(e){
+            this.logger.error('sweepToken failed, mint: ', mint, 'leftAmount: ', leftAmount, 'e: ', e);
+        }
+    }
     async checkMintBalance(){
         let mintA = this.config.pool.mintA.scAddr;
         let mintB = this.config.pool.mintB.scAddr;
-        let mintABalance = 0;
+
         if(mintA === WSOLMint){
-             mintABalance =await  this.client.getBalance(this.owner.publicKey);
-            if(mintABalance > this.config.pool.mintA.softMaxLimit){
-                let leftAmount = mintABalance - this.config.pool.mintA.softMaxLimit;
-                let toPubkey = new PublicKey(this.config.pool.foundation);
-            //    let ret = await this.client.sendSolAndConfirmTransaction(this.owner, toPubkey, leftAmount);
-                this.logger.info('mintA', mintA, ' balance too high, send found leftbalance: ', leftAmount, ', ret: ', ret);
-            }
+            let mintABalance = await this.client.getBalance(this.owner.publicKey);
+            await this.sweepSol(mintABalance, this.config.pool.mintA.softMaxLimit, mintA);
         }else{
-             mintABalance = await this.client.getTokenBalance(this.owner.publicKey, mintA);
-             this.logger.debug('checkMintBalance, mintA', mintA, 'get TokenBalance: ', mintABalance);
-            if(mintABalance > this.config.pool.mintA.softMaxLimit){
-                let leftAmount = mintABalance - this.config.pool.mintA.softMaxLimit;
-                let toPubkey = new PublicKey(this.config.pool.foundation);
-         //       let ret = await this.client.sendTokenAndConfirmTransaction(mintA, this.owner, toPubkey, leftAmount);
-                this.logger.info('mintA', mintA, ' balance too high, send found leftbalance: ', leftAmount, ', ret: ', ret);
-            }
+            let mintABalance = await this.client.getTokenBalance(this.owner.publicKey, mintA);
+            this.logger.debug('checkMintBalance, mintA', mintA, 'get TokenBalance: ', mintABalance);
+            await this.sweepToken(mintABalance, this.config.pool.mintA.softMaxLimit, mintA);
         }
 
-        let mintBBalance = 0;
         if(mintB === WSOLMint){
-             mintBBalance =await  this.client.getBalance(this.owner.publicKey);
-            if(mintBBalance > this.config.pool.mintB.softMaxLimit) {
-                let leftBmount = mintBBalance - this.config.pool.mintB.softMaxLimit;
-                let toPubkey = new PublicKey(this.config.pool.foundation);
-          //      let ret = await this.client.sendSolAndConfirmTransaction(this.owner, toPubkey, leftBmount);
-                this.logger.info('mintB', mintB, ' balance too high, send found leftbalance: ', leftBmount, ', ret: ', ret);
-
-            }
+            let mintBBalance = await this.client.getBalance(this.owner.publicKey);
+            await this.sweepSol(mintBBalance, this.config.pool.mintB.softMaxLimit, mintB);
         }else{
-             mintBBalance = await this.client.getTokenBalance(this.owner.publicKey, mintB);
+            let mintBBalance = await this.client.getTokenBalance(this.owner.publicKey, mintB);
             this.logger.debug('checkMintBalance, mintB', mintB, 'get TokenBalance: ', mintBBalance);
-            if(mintBBalance > this.config.pool.mintB.softMaxLimit) {
-                let leftBmount = mintBBalance - this.config.pool.mintB.softMaxLimit;
-                let toPubkey = new PublicKey(this.config.pool.foundation);
-          //      let ret = await this.client.sendTokenAndConfirmTransaction(mintB, this.owner, toPubkey, leftAmount);
-                this.logger.info('mintB', mintB, ' balance too high, send found leftbalance: ', leftBmount, ', ret: ', ret);
-            }
+            await this.sweepToken(mintBBalance, this.config.pool.mintB.softMaxLimit, mintB);
         }
 
     }

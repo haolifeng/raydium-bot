@@ -1,5 +1,4 @@
 const RuleInterface = require("./ruleInterface");
-const config = require("../config/Config");
 const { sleep } = require("../helpers/common");
 class VolumRule extends RuleInterface {
     constructor(owner,client, market, config) {
@@ -8,15 +7,19 @@ class VolumRule extends RuleInterface {
         this.client = client;
         this.market = market;
         this.config = config;
-
+        this.logger = global.appLogger;
     }
     async run() {
-        while(True) {
-            if(this.checkCondition()) {
-                await this.perform();
+        while(true) {
+            try{
+                if(await this.checkCondition()) {
+                    await this.perform();
+                }
+            }catch(e){
+                this.logger.error('VolumRule run, e: ', e);
             }
 
-            await sleep()
+            await sleep(this.config.checkInterval)
         }
     };
 
@@ -29,6 +32,10 @@ class VolumRule extends RuleInterface {
             let inputMint = this.config.market.priceTrade.inputMint;
             let inputAmount = this.config.market.priceTrade.inputAmount;
             let txId = await this.market.swap(inputMint, inputAmount);
+            if(!txId){
+                this.logger.error("swap failed, no txId. inputMint: ", inputMint, "inputAmount: ", inputAmount);
+                return;
+            }
             this.logger.info("perform, swap , txid: ", txId);
         }catch (e) {
             this.logger.error('e:', e);

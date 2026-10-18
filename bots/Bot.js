@@ -1,7 +1,7 @@
 require('dotenv').config();
 const config = require('../config/Config.js');
 
-global.loglevel = 'debug';
+global.loglevel = process.env.LOG_LEVEL || 'info';
 
 const Logger = require('../helpers/logger.js');
 global.appLogger = new Logger("raydium-bot", "log/raydium-bot.log", "log/raydium-bot.log", global.loglevel);
@@ -59,5 +59,10 @@ process.on('uncaughtException', error => {
 
 
 if (require.main === module) {
-    main().then(console.log).catch(console.log);
+    main().then(() => {
+        global.appLogger.info('raydium-bot main finished.');
+    }).catch((err) => {
+        global.appLogger.error('main error: ', err);
+        process.exit(1);
+    });
 }

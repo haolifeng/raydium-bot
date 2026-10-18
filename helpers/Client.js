@@ -67,7 +67,7 @@ class Client {
     }
     async getBlocks(startSlot, endSlot) {
         try{
-            const reqPromise =      this.connection.getBlocks(startSlot, endSlot, {commitment: "finalized", maxSupportedTransactionVersion: 0, rewards:false});
+            const reqPromise =      this.connection.getBlocks(startSlot, endSlot, "finalized");
             const reqPromiseWithTimeout = new TimeoutPromise(reqPromise, CONN_TIME_OUT);
             let ret = await reqPromiseWithTimeout;
 
@@ -106,7 +106,7 @@ class Client {
         }
     }
 
-    async getSignatureStatus(signaure) {
+    async getSignatureStatus(signature) {
         try {
             const reqPromise  = this.connection.getSignatureStatus(signature);
             const reqPromiseWithTimeout = new TimeoutPromise(reqPromise, CONN_TIME_OUT);
@@ -211,7 +211,7 @@ class Client {
                         programId: TOKEN_PROGRAM_ID,
                     }
                 );
-                log.debug('getTokenBalance, tokenAccounts', tokenAccounts);
+                log.debug('getTokenBalance, tokenAccounts count', tokenAccounts.value.length);
 
                 const tokenAccount = tokenAccounts.value.find(
                     accountInfo => accountInfo.account.data.parsed.info.mint === tokenMintAddress
@@ -220,8 +220,8 @@ class Client {
 
                 if (tokenAccount) {
                     const balance = await client.getTokenAccountBalance(tokenAccount.pubkey);
-                    log.debug(`Token ${tokenMintAddress} tokenAccount ${tokenAccount.pubkey} Balance: ${balance.value.uiAmount}`);
-                    resolve(balance.value.uiAmount);
+                    log.debug(`Token ${tokenMintAddress} tokenAccount ${tokenAccount.pubkey} raw: ${balance.value.amount}, uiAmount: ${balance.value.uiAmount}`);
+                    resolve(Number(balance.value.amount));
                 } else {
                     log.warn(`Token account not found, walletAddress ${walletAddress} tokenMintAddress ${tokenMintAddress}`);
                     resolve(0);
@@ -237,10 +237,14 @@ class Client {
     }
     async getTokenAccount(walletAddress, tokenMintAddress) {
         let self = this;
-        let log = this.log;
+        let log = this.logger;
         return new TimeoutPromise(async function (resolve, reject) {
             try {
                 let tokenAccountInfo = await self.connection.getAccountInfo(self.getPublicKey(tokenMintAddress));
+                if (!tokenAccountInfo) {
+                    reject(new Error(`mint account not found: ${tokenMintAddress}`));
+                    return;
+                }
                 log.debug('getTokenAccount walletAddress %s, tokenMintAddress %s, tokenOwner %s', walletAddress, tokenMintAddress, tokenAccountInfo.owner.toString());
                 const ataAddress = await getAssociatedTokenAddress(
                     self.getPublicKey(tokenMintAddress),
@@ -271,7 +275,7 @@ class Client {
             [fromKeypair]
         );
 
-        console.log('signature', signature);
+        this.logger.info('sendSolAndConfirmTransaction signature: ', signature);
         return signature;
     }
 

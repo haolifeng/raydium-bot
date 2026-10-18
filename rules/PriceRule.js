@@ -16,7 +16,11 @@ class PriceRule  extends  RuleInterface{
     async checkCondition(){
         try{
             let poolinfo = await this.market.getPoolInfo();
-            console.log("poolinfo", poolinfo);
+            if(!poolinfo){
+                this.logger.error('PriceRule: checkCondition, empty poolinfo for poolId: ', this.config.pool.poolId);
+                return;
+            }
+            this.logger.debug("poolinfo", poolinfo);
 
             let poolPrice = poolinfo.price;
             let poolMintAmountA = poolinfo.mintAmountA;
@@ -39,6 +43,10 @@ class PriceRule  extends  RuleInterface{
             let inputMint = this.config.market.priceTrade.inputMint;
             let inputAmount = this.config.market.priceTrade.inputAmount;
             let txId = await this.market.swap(inputMint, inputAmount);
+            if(!txId){
+                this.logger.error("perform, swap failed, no txId. inputMint: ", inputMint, "inputAmount: ", inputAmount);
+                return;
+            }
             this.logger.info("perform, swap , txid: ", txId);
         }catch (e) {
             this.logger.error('e:', e);
